@@ -1,0 +1,73 @@
+html {
+    overflow-y: scroll;
+    overflow-x: hidden;
+}
+body, html {
+    margin: 0px;
+    padding: 0px;
+    line-height: 26px;
+    font-size: 20px; 
+}
+h1, h2, h3, h4, h5, h6 {
+    margin: 12px 0px;
+    font-size: 22px;
+    line-height: 30px;
+    line-height: 1.3em;
+}
+h1, h2, h3 {
+    font-size: 26px;
+    line-height: 36px;
+}
+
+.dot {
+    width: 14px;
+    height: 14px;
+    background: #f00;
+    position: absolute;
+    border-radius: 7px;
+}
+.controls {
+    position: fixed;
+    top: 0px;
+    right: 0px;
+}
+#blog {
+    position: relative;
+    margin: 20px auto;
+    width: 800px;
+    background: #eee;
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+}
+.header {
+    padding: 20px;
+    border-bottom: 2px solid #888;
+}
+.header h1 {
+    margin: 0px;
+}
+.container, .sidebar {
+    display: inline-block;
+    *display:inline;zoom:1;
+    vertical-align: top;
+    background: #ddd;
+    width: 600px;
+}
+.post {
+    border-bottom: 2px solid #888;
+}
+.post:last-child {
+    border-bottom: none;
+}
+.sidebar {
+    background: none;
+    width: 190px;
+    padding: 5px;
+}
+.sidebar h3 {
+    margin: 5px 0px;
+}
+.sidebar a {
+    display: block;
+    padding: 5px 0px;
+    font-size: 18px;
+}

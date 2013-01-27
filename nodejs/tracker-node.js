@@ -44,13 +44,17 @@ io.sockets.on('connection', function (socket) {
                 type: data.type,
 				active: true
 			}
+            // Initial tracker info
+            if (data.type == 'tracker') {
+                users[userId].mouseX = 0;
+                users[userId].mouseY = 0;
+            }
 		}
         
-        // Initial tracker info
+        // Set tracker page
         if (data.type == 'tracker') {
-            users[userId].mouseX = 0;
-            users[userId].mouseY = 0;
             users[userId].scrollTop = 0;
+            users[userId].page = data.page;
         }
 
 		// Save user id to socket store
@@ -71,6 +75,10 @@ io.sockets.on('connection', function (socket) {
     				mouseY: user.mouseY,
     				scrollTop: user.scrollTop
     			});
+                socket.emit('getPage', {
+                    id: user.id,
+                    page: user.page
+                });
             }
             
 			// Send new tracker to all watchers
@@ -82,6 +90,10 @@ io.sockets.on('connection', function (socket) {
         				mouseY: users[userId].mouseY,
         				scrollTop: users[userId].scrollTop
     				});
+                    sockets[user.sockId].socket.emit('getPage', {
+                        id: users[userId].id,
+                        page: users[userId].page
+                    });
     			}
             }
 		});

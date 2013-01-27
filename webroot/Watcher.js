@@ -6,10 +6,17 @@ var Watcher = new (function() {
     }
     var Viewer = new (function() {
         this.Init = function() {
-            $('body').append("<div class='dot'></div>");
         }
+        var $dot = false;
         this.Move = function(move) {
-            $('.dot').animate({'top':move.mouseY-7, 'left':move.mouseX-7}, 200, 'linear');
+            if ($dot == false) {
+                $('#blog').append("<div class='dot'></div>");
+                $dot = $('.dot'); 
+                $dot.css({'top':move.mouseY-7, 'left':move.mouseX-7});             
+            }
+            else {
+                $dot.animate({'top':move.mouseY-7, 'left':move.mouseX-7}, 200, 'linear');   
+            }
             $('html,body').animate({'scrollTop':move.scrollTop}, 200);
         }
         this.AddVisitor = function(data) {
@@ -24,6 +31,12 @@ var Watcher = new (function() {
 			});
             socket.on('getMove', function(data) {
                 Viewer.Move(data);
+            });
+            socket.on('getPage', function(data) {
+                console.log(data);
+                if (typeof data.page != 'undefined' && window.location.href != data.page) {
+                    window.location.href = data.page;
+                } 
             });
         }
     });
