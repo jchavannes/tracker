@@ -37,9 +37,10 @@ h1, h2, h3 {
     width: 800px;
     background: #eee;
     box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+    border-radius: 8px;
 }
 .header {
-    padding: 20px;
+    padding: 20px 5px;
     border-bottom: 2px solid #888;
 }
 .header h1 {
@@ -50,13 +51,20 @@ h1, h2, h3 {
     *display:inline;zoom:1;
     vertical-align: top;
     background: #ddd;
-    width: 600px;
+    width: 590px;
+    padding: 5px;
+}
+.container {
+    border-bottom-left-radius: 8px;
 }
 .post {
     border-bottom: 2px solid #888;
 }
 .post:last-child {
     border-bottom: none;
+}
+.post h3 {
+    margin: 10px 0px;
 }
 .sidebar {
     background: none;

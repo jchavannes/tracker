@@ -10,9 +10,7 @@ var Tracker = new(function() {
         mouseY: 0
     };
     this.MouseMove = function(e) {
-        console.log(e);
-        var $blog = $("#blog");
-        var offset = $blog.offset();
+        var offset = $("#blog").offset();
         mouseCords.mouseX = e.pageX - offset.left;
         mouseCords.mouseY = e.pageY - offset.top;
     }
@@ -38,14 +36,14 @@ var Tracker = new(function() {
     var Socket = new (function() {
         var socket;
         this.Init = function() {
-			socket = io.connect('ws://192.168.1.52:8030');
-			socket.on('connected', function() {
-				socket.emit('setSession', {sessionId: document.cookie.match(/PHPSESSID=([^;]+)/)[1], type:'tracker', page: window.location.href});
-			});
+            socket = io.connect('ws://192.168.1.52:8030');
+            socket.on('connected', function() {
+                socket.emit('setSession', {sessionId: document.cookie.match(/PHPSESSID=([^;]+)/)[1], type:'tracker', page: window.location.href});
+            });
         }
-		this.SendMove = function(params) {
-			socket.emit('sendMove', params);
-		}
+        this.SendMove = function(params) {
+            socket.emit('sendMove', params);
+        }
     });
     $(document).ready(this.Init);
 });
