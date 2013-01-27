@@ -1,7 +1,6 @@
 /* Author: Jason Chavannes <jason.chavannes@gmail.com>
  * Date: 1/26/2013 */
 
-// Load dependencies and create data stores
 var io = require('socket.io').listen(8030);
 var sockets = [];
 var users = [];
@@ -10,24 +9,26 @@ var users = [];
 io.sockets.on('connection', function (socket) {
 
 	// Add connection to socket store
-	var id = sockets.length;
-	sockets[id] = {id: id, socket: socket}
+	var SocketId = sockets.length;
+	sockets[SocketId] = {id: SocketId, socket: socket}
 
 	// Send socket id to client
-	sockets[id].socket.emit('getSocket', {sockId: id});
+	socket.emit('connected');
+	
+    var userId = false;
 
 	// Get session key from client
-	sockets[id].socket.on('setSession', function(data) {
+	socket.on('setSession', function(data) {
 
 		// Save session key to socket store
-		sockets[data.sockId].sessionId = data.sessionId;
-		var userId = false;
+		sockets[SocketId].sessionId = data.sessionId;
 
 		// Check if user exists already
 		for(var i = 0; typeof users[i] != 'undefined'; i++) {
 			if(users[i].sessionId == data.sessionId) {
 				userId = i;
-				users[i].sockId = data.sockId;
+				users[i].sockId = SocketId;
+                users[i].type = data.type;
 			}
 		}
 
@@ -39,89 +40,88 @@ io.sockets.on('connection', function (socket) {
 			users[userId] = {
 				id: userId,
 				sessionId: data.sessionId,
-				sockId: data.sockId,
-				active: true,
-				mouseX: data.mouseX,
-				mouseY: data.mouseY,
-				scrollTop: data.scrollTop
+				sockId: SocketId,
+                type: data.type,
+				active: true
 			}
 		}
+        
+        // Initial tracker info
+        if (data.type == 'tracker') {
+            users[userId].mouseX = 0;
+            users[userId].mouseY = 0;
+            users[userId].scrollTop = 0;
+        }
 
 		// Save user id to socket store
-		sockets[data.sockId].userId = userId;
+		sockets[SocketId].userId = userId;
 
-		// Set / Refresh expiration
+		// Set / Refresh activity
 		refreshUser(userId);
-
-		// Send user information to client
-		sockets[data.sockId].socket.emit('getMyUserInfo', {
-			id: userId
-		});
-
-		var now = new Date().getTime();
+        
 		users.forEach(function(user) {
 
 			if (!isActive(user.id)) return;
-
-			// Send all users to client
-			sockets[data.sockId].socket.emit('getMove', {
-				id: user.id,
-				mouseX: user.mouseX,
-				mouseY: user.mouseY,
-				scrollTop: user.scrollTop
-			});
-
-			// Send new user to all clients
-			if(user.id != userId) {
-				sockets[user.sockId].socket.emit('getMove', {
-					id: users[userId].id,
-    				mouseX: users[userId].mouseX,
-    				mouseY: users[userId].mouseY,
-    				scrollTop: users[userId].scrollTop
-				});
-			}
+            
+			// Send all trackers to new watcher
+            if (user.type == 'tracker' && users[userId].type == 'watcher') {
+    			socket.emit('getMove', {
+    				id: user.id,
+    				mouseX: user.mouseX,
+    				mouseY: user.mouseY,
+    				scrollTop: user.scrollTop
+    			});
+            }
+            
+			// Send new tracker to all watchers
+            if (user.type == 'watcher' && users[userId].type == 'tracker') {
+    			if(user.id != userId) {
+    				sockets[user.sockId].socket.emit('getMove', {
+    					id: users[userId].id,
+        				mouseX: users[userId].mouseX,
+        				mouseY: users[userId].mouseY,
+        				scrollTop: users[userId].scrollTop
+    				});
+    			}
+            }
 		});
 	});
 
 	// Get move from client
-	sockets[id].socket.on('sendMove', function(data) {
-		if (typeof users[data.id] != 'undefined') {
-			refreshUser(data.id);
-			users[data.id].mouseX = data.mouseX;
-			users[data.id].mouseY = data.mouseY;
-			users[data.id].scrollTop = data.scrollTop;
+	socket.on('sendMove', function(data) {
+        console.log(data);
+		refreshUser(userId);
+		users[userId].mouseX = data.mouseX;
+		users[userId].mouseY = data.mouseY;
+		users[userId].scrollTop = data.scrollTop;
 
-			// Send move to all clients (except sending client)
-			users.forEach(function(user) {
-				if(user.id != data.id && isActive(user.id)) {
-					sockets[user.sockId].socket.emit('getMove', {
-						id: data.id,
-        				mouseX: data.mouseX,
-        				mouseY: data.mouseY,
-        				scrollTop: data.scrollTop
-					})
-				}
-			});
-		}
+		// Send move to all watchers
+		users.forEach(function(user) {
+			if(isActive(user.id) && user.type == 'watcher') {
+				sockets[user.sockId].socket.emit('getMove', {
+					id: data.id,
+    				mouseX: data.mouseX,
+    				mouseY: data.mouseY,
+    				scrollTop: data.scrollTop
+				})
+			}
+		});
 	});
 
 	// Make inactive on disconnect
-	var disconnect = sockets[id];
-	sockets[id].socket.on('disconnect', function() {
-		if(typeof users[sockets[disconnect.id].userId] != 'undefined') {
-			users[sockets[disconnect.id].userId].active = false;
+	socket.on('disconnect', function() {
+		users[userId].active = false;
 
-			// Send disconnect to all clients
-			users.forEach(function(user) {
-				if(isActive(user.id)) {
-					sockets[user.sockId].socket.emit('userExit', {id: disconnect.userId});
-				}
-			});
-			sendMessage(sockets[disconnect.id].userId, "has disconnected.<br/>", false);
-		}
+		// Send disconnect to all watchers
+		users.forEach(function(user) {
+			if(isActive(user.id) && user.type == 'watcher') {
+				sockets[user.sockId].socket.emit('userExit', {id: userId});
+			}
+		});
 	});
 });
 
+// Checks if a user is active
 function isActive(userId) {
 	return users[userId].active && users[userId].expire > new Date().getTime();
 }
@@ -130,7 +130,7 @@ function isActive(userId) {
 function refreshUser(userId) {
 	var now = new Date().getTime();
 	if(typeof users[userId] != 'undefined') {
-		users[userId].expire = now + 600000;
+		users[userId].expire = now + 600000; // 10 hours
 		users[userId].active = true;
 	}
 }
