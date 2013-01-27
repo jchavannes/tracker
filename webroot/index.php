@@ -87,16 +87,19 @@
 </div>
 
 <div class="controls">
+    <?php if (!$_SESSION['loggedin']) : ?>
     <form action="" method="post">
-        <?php if (!$_SESSION['loggedin']) : ?>
-            <input type="hidden" name="login" value="true" />
-            <input type="submit" value="Login" />
-        <?php else : ?>
-            <input type="hidden" name="logout" value="true" />
-            You are logged in.
-            <input type="submit" value="Logout" />
-        <?php endif; ?>
+        <input type="hidden" name="login" value="true" />
+        Click this button to become a watcher! --&gt;
+        <input type="submit" value="Start Watching" />
     </form>
+    <?php else : ?>
+    <form action="" method="post">
+        <input type="hidden" name="logout" value="true" />
+        <input type="submit" value="Stop Watching" />
+    </form>
+    <div class="users"></div>
+    <?php endif; ?>
 </div>
 
 </body>

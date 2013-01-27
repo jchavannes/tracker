@@ -15,18 +15,33 @@ var Watcher = new (function() {
             }
             $('html,body').animate({'scrollTop':move.scrollTop}, 200);
         }
-    });   
+    });
     var Socket = new (function() {
         this.Init = function() {
             socket = io.connect('ws://192.168.1.52:8030');
             socket.on('connected', function() {
                 socket.emit('setSession', {sessionId: document.cookie.match(/PHPSESSID=([^;]+)/)[1], type:'watcher'});
+                socket.emit('getUsers');
             });
             socket.on('getMove', Viewer.Move);
             socket.on('getPage', function(data) {
                 if (typeof data.page != 'undefined' && window.location.href != data.page) {
                     window.location.href = data.page;
-                } 
+                }
+                socket.emit('getUsers');
+            });
+            socket.on('sendUsers', function(data) {
+                $('.controls .users').html((data.users.length + data.watchers) + " visitor(s), " + data.watchers + " watching.<br/>");
+                if (data.users.length) {
+                    $select = $("<select/>");
+                    data.users.forEach(function(user) {
+                        $select.append("<option>User " + (user.id+1) + " on " + user.browser+"</option>");
+                    });
+                    $('.controls .users').append("You are watching: ").append($select);
+                }
+                else {
+                    $('.controls .users').append("No one to watch.");
+                }
             });
         }
     });

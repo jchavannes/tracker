@@ -1,8 +1,5 @@
 var Tracker = new(function() {
-    var checkInterval;
     this.Init = function() {
-        $(window).bind('mousemove', Tracker.MouseMove);
-        checkInterval = setInterval(Tracker.CheckChanges, 200);
         Socket.Init();
     }
     var mouseCords = {
@@ -38,7 +35,14 @@ var Tracker = new(function() {
         this.Init = function() {
             socket = io.connect('ws://192.168.1.52:8030');
             socket.on('connected', function() {
-                socket.emit('setSession', {sessionId: document.cookie.match(/PHPSESSID=([^;]+)/)[1], type:'tracker', page: window.location.href});
+                socket.emit('setSession', {
+                    sessionId: document.cookie.match(/PHPSESSID=([^;]+)/)[1],
+                    type: 'tracker',
+                    browser: $.browser.chrome?"chrome" : $.browser.safari?"safari" : $.browser.mozilla?"mozilla" : $.browser.msie?"msie" : "unknown",
+                    page: window.location.href
+                });
+                $(window).bind('mousemove', Tracker.MouseMove);
+                setInterval(Tracker.CheckChanges, 200);
             });
         }
         this.SendMove = function(params) {

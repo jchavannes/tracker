@@ -55,6 +55,7 @@ io.sockets.on('connection', function (socket) {
         if (data.type == 'tracker') {
             users[userId].scrollTop = 0;
             users[userId].page = data.page;
+            users[userId].browser = data.browser;
         }
         
         // Save user id to socket store
@@ -99,6 +100,29 @@ io.sockets.on('connection', function (socket) {
         });
     });
     
+    // Send users to watcher
+    socket.on('getUsers', function() {
+        var trackers = [];
+        var watchers = 0;
+        users.forEach(function(user) {
+            if (!isActive(user.id)) return;
+            if (user.type == 'tracker') {
+                trackers.push({
+                    id: user.id,
+                    page: user.page,
+                    browser: user.browser
+                });
+            }
+            else {
+                watchers++;
+            }
+        });
+        socket.emit('sendUsers', {
+            watchers: watchers,
+            users: trackers
+        });
+    });
+
     // Get move from client
     socket.on('sendMove', function(data) {
         refreshUser(userId);
